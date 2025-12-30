@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Login to VoteSecure - Access your voter account">
+    <title>Login - VoteSecure</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">🗳️ VoteSecure</a>
+            <ul class="navbar-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="results.html">Results</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Login Form -->
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>Welcome Back</h1>
+                <p>Login to access your voting dashboard</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" id="email" class="form-input" placeholder="your.email@example.com" required>
+                    <div class="form-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
+                    <div class="form-error"></div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                    Login
+                </button>
+
+                <div style="text-align: center; margin-top: 15px;">
+                    <a href="forgot-password.html" style="text-decoration: none; font-size: 0.9rem; color: #666;">
+                        Forgot Password?
+                    </a>
+                </div>
+            </form>
+
+            <div class="auth-footer">
+                Don't have an account? <a href="register.html">Register here</a>
+            </div>
+
+            <!-- Admin credentials hint -->
+            <div class="alert alert-info" style="margin-top: 1.5rem; font-size: 0.875rem;">
+                <strong>Admin Login:</strong> admin@voting.com / admin123
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/storage.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/voting.js"></script>
+    <script src="js/main.js"></script>
+
+    <script>
+        // Redirect if already logged in
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await Auth.checkAuth();
+            if (user) {
+                if (user.role === 'admin') {
+                    window.location.href = 'admin-dashboard.html';
+                } else {
+                    window.location.href = 'voter-dashboard.html';
+                }
+            }
+        });
+
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            // Clear previous errors
+            clearAllFormErrors(this);
+
+            // Get form values
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            // Validation
+            let hasError = false;
+
+            if (!email) {
+                showFormError(document.getElementById('email'), 'Email is required');
+                hasError = true;
+            }
+
+            if (!password) {
+                showFormError(document.getElementById('password'), 'Password is required');
+                hasError = true;
+            }
+
+            if (hasError) return;
+
+            // Attempt login
+            const result = await Auth.login(email, password);
+
+            if (result.success) {
+                showAlert(result.message, 'success');
+
+                // Redirect based on role
+                setTimeout(() => {
+                    if (result.user.role === 'admin') {
+                        window.location.href = 'admin-dashboard.html';
+                    } else {
+                        window.location.href = 'voter-dashboard.html';
+                    }
+                }, 1000);
+            } else {
+                showAlert(result.message, 'error');
+            }
+        });
+
+        // Clear errors on input
+        document.querySelectorAll('.form-input').forEach(input => {
+            input.addEventListener('input', function () {
+                clearFormError(this);
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Name Validation Test - VoteSecure</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .test-container {
+            max-width: 600px;
+            margin: 100px auto;
+            padding: 2rem;
+        }
+
+        .test-info {
+            background: var(--bg-glass);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .test-info h3 {
+            color: var(--primary-light);
+            margin-bottom: 1rem;
+        }
+
+        .test-info ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .test-info li {
+            padding: 0.5rem 0;
+            color: var(--text-secondary);
+        }
+
+        .test-info li::before {
+            content: "✓ ";
+            color: var(--accent);
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        .test-examples {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .example-box {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: var(--radius-sm);
+        }
+
+        .example-box h4 {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .example-box.valid h4 {
+            color: var(--accent);
+        }
+
+        .example-box.invalid h4 {
+            color: #f87171;
+        }
+
+        .example-box code {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .status-message {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            display: none;
+        }
+
+        .status-message.show {
+            display: block;
+        }
+
+        .status-message.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--accent);
+            color: #6ee7b7;
+        }
+
+        .status-message.error {
+            background: rgba(248, 113, 113, 0.1);
+            border: 1px solid #f87171;
+            color: #fca5a5;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">🗳️ VoteSecure - Validation Test</a>
+            <ul class="navbar-menu">
+                <li><a href="register.html">Register Page</a></li>
+                <li><a href="index.html">Home</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="test-container">
+        <h1 style="text-align: center; margin-bottom: 2rem;">Full Name Validation Test</h1>
+
+        <div class="test-info">
+            <h3>Validation Rules</h3>
+            <ul>
+                <li>Only letters (A-Z, a-z) are allowed</li>
+                <li>Spaces are allowed for first and last names</li>
+                <li>Numbers are NOT allowed</li>
+                <li>Special characters are NOT allowed</li>
+                <li>Real-time validation as you type</li>
+            </ul>
+
+            <div class="test-examples">
+                <div class="example-box valid">
+                    <h4>✓ Valid Examples</h4>
+                    <code>John Doe</code>
+                    <code>Mary Jane Watson</code>
+                    <code>SingleName</code>
+                </div>
+                <div class="example-box invalid">
+                    <h4>✗ Invalid Examples</h4>
+                    <code>John123</code>
+                    <code>John@Doe</code>
+                    <code>John_Doe</code>
+                </div>
+            </div>
+        </div>
+
+        <div class="auth-card">
+            <h2 style="text-align: center; margin-bottom: 1.5rem;">Test the Validation</h2>
+
+            <form id="testForm">
+                <div class="form-group">
+                    <label for="name" class="form-label">Full Name</label>
+                    <input type="text" id="name" name="name" class="form-input" placeholder="Enter your full name"
+                        pattern="[A-Za-z\s]+" title="Please enter letters only" required>
+                    <div class="form-error"></div>
+                </div>
+
+                <div class="status-message" id="statusMessage"></div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                    Test Validation
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/main.js"></script>
+    <script>
+        // Real-time validation for Full Name field
+        const nameInput = document.getElementById('name');
+        nameInput.addEventListener('input', function () {
+            const nameRegex = /^[A-Za-z\s]*$/; // Allow partial input during typing
+            const value = this.value;
+
+            if (value && !nameRegex.test(value)) {
+                showFormError(this, 'Please enter letters only in the Full Name field');
+                showStatus('Invalid input detected! Remove numbers and special characters.', 'error');
+            } else {
+                clearFormError(this);
+                if (value) {
+                    showStatus('Looking good! Only letters and spaces.', 'success');
+                } else {
+                    hideStatus();
+                }
+            }
+        });
+
+        // Form submission test
+        document.getElementById('testForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const name = nameInput.value.trim();
+            const nameRegex = /^[A-Za-z\s]+$/;
+
+            if (!name) {
+                showFormError(nameInput, 'Name is required');
+                showStatus('Error: Name field cannot be empty', 'error');
+            } else if (!nameRegex.test(name)) {
+                showFormError(nameInput, 'Please enter letters only in the Full Name field');
+                showStatus('Error: Name contains invalid characters', 'error');
+            } else {
+                clearFormError(nameInput);
+                showStatus('✓ Success! "' + name + '" is a valid name and would be accepted by the system.', 'success');
+            }
+        });
+
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.className = 'status-message show ' + type;
+        }
+
+        function hideStatus() {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.className = 'status-message';
+        }
+    </script>
+</body>
+
+</html>

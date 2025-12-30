@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Register for VoteSecure - Create your voter account">
+    <title>Register - VoteSecure</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">🗳️ VoteSecure</a>
+            <ul class="navbar-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="results.html">Results</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Registration Form -->
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>Create Account</h1>
+                <p>Join VoteSecure and make your voice heard</p>
+            </div>
+
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="name" class="form-label">Full Name</label>
+                    <input type="text" id="name" name="name" class="form-input" placeholder="Enter your full name"
+                        pattern="[A-Za-z\s]+" title="Please enter letters only" required>
+                    <div class="form-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" id="email" class="form-input" placeholder="your.email@example.com" required>
+                    <div class="form-error"></div>
+                </div>
+
+
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="Create a strong password"
+                        required>
+                    <div class="form-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword" class="form-label">Confirm Password</label>
+                    <input type="password" id="confirmPassword" class="form-input" placeholder="Re-enter your password"
+                        required>
+                    <div class="form-error"></div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                    Register
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                Already have an account? <a href="login.html">Login here</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/storage.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/voting.js"></script>
+    <script src="js/main.js"></script>
+
+    <script>
+        // Registration form handler
+        document.getElementById('registerForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            // Clear previous errors
+            clearAllFormErrors(this);
+
+            // Get form values
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // Validation
+            let hasError = false;
+
+            // Validate Full Name - letters and spaces only
+            const nameRegex = /^[A-Za-z\s]+$/;
+            if (!name) {
+                showFormError(document.getElementById('name'), 'Name is required');
+                hasError = true;
+            } else if (!nameRegex.test(name)) {
+                showFormError(document.getElementById('name'), 'Please enter letters only in the Full Name field');
+                hasError = true;
+            }
+
+            if (!email) {
+                showFormError(document.getElementById('email'), 'Email is required');
+                hasError = true;
+            }
+
+            if (!password) {
+                showFormError(document.getElementById('password'), 'Password is required');
+                hasError = true;
+            } else if (password.length < 6) {
+                showFormError(document.getElementById('password'), 'Password must be at least 6 characters');
+                hasError = true;
+            }
+
+            if (password !== confirmPassword) {
+                showFormError(document.getElementById('confirmPassword'), 'Passwords do not match');
+                hasError = true;
+            }
+
+            if (hasError) return;
+
+            // Attempt registration (now with await)
+            const result = await Auth.register({
+                name: name,
+                email: email,
+                password: password
+            });
+
+            if (result.success) {
+                showAlert(result.message, 'success');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+            } else {
+                showAlert(result.message, 'error');
+            }
+        });
+
+        // Real-time validation for Full Name field
+        const nameInput = document.getElementById('name');
+        nameInput.addEventListener('input', function () {
+            const nameRegex = /^[A-Za-z\s]*$/; // Allow partial input during typing
+            const value = this.value;
+
+            if (value && !nameRegex.test(value)) {
+                showFormError(this, 'Please enter letters only in the Full Name field');
+            } else {
+                clearFormError(this);
+            }
+        });
+
+        // Clear errors on input for other fields
+        document.querySelectorAll('.form-input').forEach(input => {
+            if (input.id !== 'name') { // Skip name field as it has custom handler
+                input.addEventListener('input', function () {
+                    clearFormError(this);
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

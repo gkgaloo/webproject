@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Admin Registration - VoteSecure" />
+    <title>Admin Registration - VoteSecure</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+        /* Small admin-specific overrides */
+        .admin-auth-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 75vh;
+            background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+        }
+
+        .admin-auth-card {
+            max-width: 480px;
+            width: 100%;
+            background: #0b1220;
+            color: #e6eef8;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 8px 30px rgba(2, 6, 23, 0.6);
+        }
+
+        .admin-auth-card .auth-header h1 {
+            margin: 0;
+            font-size: 1.6rem;
+        }
+
+        .admin-auth-card .form-label {
+            color: #cbd5e1;
+        }
+
+        .btn-admin {
+            background: #ef4444;
+            border: none;
+            color: #fff;
+            padding: 0.6rem 0.9rem;
+            border-radius: 6px;
+        }
+
+        .btn-admin:hover {
+            background: #dc2626;
+        }
+
+        .admin-note {
+            margin-top: 1rem;
+            background: #111827;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #cbd5e1;
+        }
+
+        .navbar .navbar-brand {
+            color: #fff;
+        }
+
+        .password-requirements {
+            font-size: 0.85rem;
+            color: #9aa8bf;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: #111827;
+            border-radius: 4px;
+        }
+
+        .password-requirements ul {
+            margin: 0.3rem 0 0 0;
+            padding-left: 1.2rem;
+        }
+
+        .password-requirements li {
+            margin: 0.2rem 0;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">🛡️ Admin - VoteSecure</a>
+            <ul class="navbar-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="results.html">Results</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="admin-auth-container">
+        <div class="admin-auth-card">
+            <div class="auth-header">
+                <h1>Administrator Registration</h1>
+                <p style="margin: 0.5rem 0 1rem 0; color: #9aa8bf">
+                    Create a new administrator account
+                </p>
+            </div>
+
+            <form id="adminRegisterForm">
+                <div class="form-group">
+                    <label for="adminName" class="form-label">Full Name</label>
+                    <input type="text" id="adminName" class="form-input" placeholder="John Doe" required />
+                    <div class="form-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="adminEmail" class="form-label">Email Address</label>
+                    <input type="email" id="adminEmail" class="form-input" placeholder="admin@example.com" required />
+                    <div class="form-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="adminPassword" class="form-label">Password</label>
+                    <input type="password" id="adminPassword" class="form-input" placeholder="Create a strong password"
+                        required />
+                    <div class="form-error"></div>
+                    <div class="password-requirements">
+                        <strong>Password must contain:</strong>
+                        <ul>
+                            <li>At least 8 characters</li>
+                            <li>One uppercase letter</li>
+                            <li>One lowercase letter</li>
+                            <li>One number</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="adminConfirmPassword" class="form-label">Confirm Password</label>
+                    <input type="password" id="adminConfirmPassword" class="form-input"
+                        placeholder="Re-enter your password" required />
+                    <div class="form-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="adminAccessCode" class="form-label">Admin Access Code</label>
+                    <input type="text" id="adminAccessCode" class="form-input" placeholder="Enter admin access code"
+                        required />
+                    <div class="form-error"></div>
+                    <div class="password-requirements" style="margin-top: 0.5rem;">
+                        Required to create administrator accounts. Contact your system administrator for the access
+                        code.
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-admin" style="width: 100%; margin-top: 1rem">
+                    Create Admin Account
+                </button>
+
+                <div style="text-align: center; margin-top: 15px;">
+                    <a href="admin-login.html" style="text-decoration: none; font-size: 0.9rem; color: #cbd5e1;">
+                        Already have an account? Sign In
+                    </a>
+                </div>
+            </form>
+
+            <div class="admin-note">
+                Administrator accounts have elevated privileges and can manage elections, candidates, and users.
+                <div style="margin-top: 0.5rem">
+                    <a href="register.html" style="color: #fff; text-decoration: underline">Register as Voter</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const user = await Auth.checkAuth();
+            if (user) {
+                if (user.role === "admin")
+                    window.location.href = "admin-dashboard.html";
+                else window.location.href = "voter-dashboard.html";
+            }
+        });
+
+        document
+            .getElementById("adminRegisterForm")
+            .addEventListener("submit", async function (e) {
+                e.preventDefault();
+                clearAllFormErrors(this);
+
+                const name = document.getElementById("adminName").value.trim();
+                const email = document.getElementById("adminEmail").value.trim();
+                const password = document.getElementById("adminPassword").value;
+                const confirmPassword = document.getElementById("adminConfirmPassword").value;
+                const accessCode = document.getElementById("adminAccessCode").value.trim();
+
+                let hasError = false;
+
+                // Validate name
+                if (!name) {
+                    showFormError(
+                        document.getElementById("adminName"),
+                        "Name is required"
+                    );
+                    hasError = true;
+                }
+
+                // Validate email
+                if (!email) {
+                    showFormError(
+                        document.getElementById("adminEmail"),
+                        "Email is required"
+                    );
+                    hasError = true;
+                } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    showFormError(
+                        document.getElementById("adminEmail"),
+                        "Invalid email format"
+                    );
+                    hasError = true;
+                }
+
+                // Validate password
+                if (!password) {
+                    showFormError(
+                        document.getElementById("adminPassword"),
+                        "Password is required"
+                    );
+                    hasError = true;
+                } else if (password.length < 8) {
+                    showFormError(
+                        document.getElementById("adminPassword"),
+                        "Password must be at least 8 characters"
+                    );
+                    hasError = true;
+                } else if (!/[A-Z]/.test(password)) {
+                    showFormError(
+                        document.getElementById("adminPassword"),
+                        "Password must contain an uppercase letter"
+                    );
+                    hasError = true;
+                } else if (!/[a-z]/.test(password)) {
+                    showFormError(
+                        document.getElementById("adminPassword"),
+                        "Password must contain a lowercase letter"
+                    );
+                    hasError = true;
+                } else if (!/[0-9]/.test(password)) {
+                    showFormError(
+                        document.getElementById("adminPassword"),
+                        "Password must contain a number"
+                    );
+                    hasError = true;
+                }
+
+                // Validate confirm password
+                if (!confirmPassword) {
+                    showFormError(
+                        document.getElementById("adminConfirmPassword"),
+                        "Please confirm your password"
+                    );
+                    hasError = true;
+                } else if (password !== confirmPassword) {
+                    showFormError(
+                        document.getElementById("adminConfirmPassword"),
+                        "Passwords do not match"
+                    );
+                    hasError = true;
+                }
+
+                // Validate access code
+                if (!accessCode) {
+                    showFormError(
+                        document.getElementById("adminAccessCode"),
+                        "Access code is required"
+                    );
+                    hasError = true;
+                }
+
+                if (hasError) return;
+
+                try {
+                    const response = await fetch("backend/admin/register_admin.php", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            name: name,
+                            email: email,
+                            password: password,
+                            accessCode: accessCode,
+                        }),
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        showAlert("Admin account created successfully! Redirecting to login...", "success");
+                        setTimeout(() => {
+                            window.location.href = "admin-login.html";
+                        }, 1500);
+                    } else {
+                        showAlert(result.message || "Registration failed", "error");
+                    }
+                } catch (error) {
+                    console.error("Error:", error);
+                    showAlert("Network error. Please try again.", "error");
+                }
+            });
+
+        // Clear errors on input
+        document.querySelectorAll(".form-input").forEach((input) => {
+            input.addEventListener("input", function () {
+                clearFormError(this);
+            });
+        });
+    </script>
+</body>
+
+</html>

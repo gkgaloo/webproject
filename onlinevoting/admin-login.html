@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Admin Login - VoteSecure" />
+  <title>Admin Login - VoteSecure</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* Small admin-specific overrides */
+    .admin-auth-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 75vh;
+      background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+    }
+
+    .admin-auth-card {
+      max-width: 420px;
+      width: 100%;
+      background: #0b1220;
+      color: #e6eef8;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 8px 30px rgba(2, 6, 23, 0.6);
+    }
+
+    .admin-auth-card .auth-header h1 {
+      margin: 0;
+      font-size: 1.6rem;
+    }
+
+    .admin-auth-card .form-label {
+      color: #cbd5e1;
+    }
+
+    .btn-admin {
+      background: #ef4444;
+      border: none;
+      color: #fff;
+      padding: 0.6rem 0.9rem;
+      border-radius: 6px;
+    }
+
+    .admin-note {
+      margin-top: 1rem;
+      background: #111827;
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      color: #cbd5e1;
+    }
+
+    .navbar .navbar-brand {
+      color: #fff;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="navbar-brand">🛡️ Admin - VoteSecure</a>
+      <ul class="navbar-menu">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="results.html">Results</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="admin-auth-container">
+    <div class="admin-auth-card">
+      <div class="auth-header">
+        <h1>Administrator Sign In</h1>
+        <p style="margin: 0.5rem 0 1rem 0; color: #9aa8bf">
+          Restricted access — admin accounts only
+        </p>
+      </div>
+
+      <form id="adminLoginForm">
+        <div class="form-group">
+          <label for="adminEmail" class="form-label">Email Address</label>
+          <input type="email" id="adminEmail" class="form-input" placeholder="admin@example.com" required />
+          <div class="form-error"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="adminPassword" class="form-label">Password</label>
+          <input type="password" id="adminPassword" class="form-input" placeholder="Enter your password" required />
+          <div class="form-error"></div>
+        </div>
+
+        <button type="submit" class="btn btn-admin" style="width: 100%; margin-top: 1rem">
+          Sign in as Admin
+        </button>
+
+        <div style="text-align: center; margin-top: 15px;">
+          <a href="forgot-password.html" style="text-decoration: none; font-size: 0.9rem; color: #cbd5e1;">
+            Forgot Password?
+          </a>
+          <span style="margin: 0 8px; color: #6b7280;">|</span>
+          <a href="admin-register.html" style="text-decoration: none; font-size: 0.9rem; color: #cbd5e1;">
+            Create Admin Account
+          </a>
+        </div>
+      </form>
+
+      <div class="admin-note">
+        Use an administrator account to access the admin dashboard. If you are
+        a voter, please use the regular login page.
+        <div style="margin-top: 0.5rem">
+          <a href="login.html" style="color: #fff; text-decoration: underline">Voter Login</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/main.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const user = await Auth.checkAuth();
+      if (user) {
+        if (user.role === "admin")
+          window.location.href = "admin-dashboard.html";
+        else window.location.href = "voter-dashboard.html";
+      }
+    });
+
+    document
+      .getElementById("adminLoginForm")
+      .addEventListener("submit", async function (e) {
+        e.preventDefault();
+        clearAllFormErrors(this);
+
+        const email = document.getElementById("adminEmail").value.trim();
+        const password = document.getElementById("adminPassword").value;
+
+        let hasError = false;
+        if (!email) {
+          showFormError(
+            document.getElementById("adminEmail"),
+            "Email is required"
+          );
+          hasError = true;
+        }
+        if (!password) {
+          showFormError(
+            document.getElementById("adminPassword"),
+            "Password is required"
+          );
+          hasError = true;
+        }
+        if (hasError) return;
+
+        const result = await Auth.login(email, password);
+
+        if (result.success) {
+          // Ensure the account is actually an admin
+          if (!result.user || result.user.role !== "admin") {
+            showAlert("Access denied — admin accounts only", "error");
+            // Clear any client-side session and server session
+            await Auth.logout();
+            return;
+          }
+
+          showAlert("Welcome, admin!", "success");
+          setTimeout(() => {
+            window.location.href = "admin-dashboard.html";
+          }, 700);
+        } else {
+          showAlert(result.message || "Login failed", "error");
+        }
+      });
+
+    // Clear errors on input
+    document.querySelectorAll(".form-input").forEach((input) => {
+      input.addEventListener("input", function () {
+        clearFormError(this);
+      });
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Election Results - View voting results">
+  <title>Election Results - VoteSecure</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="navbar-brand">🗳️ VoteSecure</a>
+      <ul class="navbar-menu">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="results.html" class="active">Results</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Results -->
+  <div class="dashboard">
+    <div class="dashboard-header">
+      <h1>Election Results</h1>
+      <p id="electionStatusMessage">Live voting results</p>
+    </div>
+
+    <div class="container dashboard-content">
+      <!-- Overall Stats -->
+      <div class="stats-grid mb-3" id="overallStats"></div>
+
+      <!-- Results Grid -->
+      <div class="results-grid" id="resultsGrid"></div>
+
+      <!-- No Results Message -->
+      <div id="noResultsMessage" class="text-center" style="display: none;">
+        <div class="card">
+          <h3>No Results Available</h3>
+          <p class="text-muted">No votes have been cast yet. Be the first to vote!</p>
+          <a href="login.html" class="btn btn-primary mt-2">Login to Vote</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="js/storage.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/voting.js"></script>
+  <script src="js/main.js"></script>
+
+  <script>
+    // Initialize results page
+    document.addEventListener('DOMContentLoaded', () => {
+      loadResults();
+
+      // Auto-refresh results every 5 seconds if election is open
+      // Auto-refresh results every 5 seconds if election is open
+      setInterval(async () => {
+        const status = await Voting.getElectionStatus();
+        if (status.isOpen) {
+          await loadResults();
+        }
+      }, 5000);
+    });
+
+    async function loadResults() {
+      const results = await Voting.getResults();
+      const stats = await Voting.getStats();
+      const electionStatus = await Voting.getElectionStatus();
+
+      // Update election status message
+      const statusMsg = document.getElementById('electionStatusMessage');
+      if (electionStatus.isOpen) {
+        statusMsg.innerHTML = `<span class="badge badge-success">Election Open</span> Live voting results`;
+      } else {
+        statusMsg.innerHTML = `<span class="badge badge-danger">Election Closed</span> Final results`;
+      }
+
+      // Load overall stats
+      loadOverallStats(stats);
+
+      // Check if there are any votes
+      if (stats.votedCount === 0) {
+        document.getElementById('resultsGrid').style.display = 'none';
+        document.getElementById('noResultsMessage').style.display = 'block';
+        return;
+      }
+
+      document.getElementById('resultsGrid').style.display = 'grid';
+      document.getElementById('noResultsMessage').style.display = 'none';
+
+      // Load results
+      const resultsGrid = document.getElementById('resultsGrid');
+      const winner = results[0]; // First candidate has most votes
+
+      resultsGrid.innerHTML = results.map((candidate, index) => {
+        const photoUrl = candidate.photo_url || '/onlinevoting/uploads/candidates/default_candidate.png';
+        return `
+        <div class="result-bar">
+          <div class="result-info">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <img src="${photoUrl}" 
+                   alt="${candidate.name}" 
+                   style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;"
+                   onerror="this.src='/onlinevoting/uploads/candidates/default_candidate.png'">
+              <div>
+                <div>
+                  <span class="result-name">${candidate.name}</span>
+                  ${index === 0 && candidate.votes > 0 ? '<span class="winner-badge">🏆 Winner</span>' : ''}
+                </div>
+                <div style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.25rem;">
+                  ${candidate.party}
+                </div>
+              </div>
+            </div>
+            <div>
+              <span class="result-votes">${candidate.votes}</span>
+              <span style="color: var(--text-muted); font-size: 0.875rem; margin-left: 0.5rem;">
+                (${candidate.percentage}%)
+              </span>
+            </div>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar" style="width: ${candidate.percentage}%;"></div>
+          </div>
+        </div>
+      `;
+      }).join('');
+    }
+
+    function loadOverallStats(stats) {
+      const overallStats = document.getElementById('overallStats');
+
+      overallStats.innerHTML = `
+        <div class="stat-card">
+          <div class="stat-value">${stats.votedCount}</div>
+          <div class="stat-label">Total Votes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${stats.totalVoters}</div>
+          <div class="stat-label">Registered Voters</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${stats.turnoutPercentage}%</div>
+          <div class="stat-label">Voter Turnout</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${stats.totalCandidates}</div>
+          <div class="stat-label">Candidates</div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+
+</html>

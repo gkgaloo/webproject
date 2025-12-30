@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Voter Dashboard - Cast your vote">
+    <title>Voter Dashboard - VoteSecure</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">🗳️ VoteSecure</a>
+            <ul class="navbar-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="voter-dashboard.html" class="active">Dashboard</a></li>
+                <li><a href="results.html">Results</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Dashboard -->
+    <div class="dashboard">
+        <div class="dashboard-header">
+            <h1>Voter Dashboard</h1>
+            <p id="welcomeMessage">Welcome back, Voter!</p>
+        </div>
+
+        <div class="container dashboard-content">
+            <!-- Voting Status -->
+            <div id="votingStatus">
+                <div class="alert alert-info" id="systemLoading">System Loading...</div>
+            </div>
+
+            <!-- Candidates Section -->
+            <div id="candidatesSection">
+                <h2 class="mb-2">Select Your Candidate</h2>
+                <p class="text-muted mb-3">Choose one candidate to cast your vote. You can only vote once.</p>
+
+                <div class="grid grid-2" id="candidatesList"></div>
+
+                <div id="voteButtonContainer" class="text-center mt-3" style="display: none;">
+                    <button id="submitVoteBtn" class="btn btn-success" style="padding: 1rem 3rem;">
+                        Cast Your Vote
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/storage.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/voting.js"></script>
+    <script src="js/main.js"></script>
+
+    <script>
+        // Protect page - only voters can access
+        if (!Auth.protectPage()) {
+            // Redirect happens in protectPage function
+        } else if (Auth.isAdmin()) {
+            window.location.href = 'admin-dashboard.html';
+        }
+
+        let selectedCandidateId = null;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboard();
+        });
+
+        async function loadDashboard() {
+            try {
+                const user = Auth.getCurrentUser();
+
+                // Update welcome message
+                document.getElementById('welcomeMessage').textContent = `Welcome back, ${user.name}!`;
+
+                // Check if user has already voted
+                if (user.hasVoted) {
+                    showVotedStatus();
+                    return;
+                }
+
+                // Check if election is open
+                const electionStatus = await Voting.getElectionStatus();
+                if (!electionStatus.isOpen) {
+                    showClosedStatus();
+                    return;
+                }
+
+                // Load candidates
+                await loadCandidates();
+
+                // Remove loading message
+                const loadingMsg = document.getElementById('systemLoading');
+                if (loadingMsg) loadingMsg.remove();
+
+            } catch (error) {
+                console.error("Dashboard Error:", error);
+                document.getElementById('votingStatus').innerHTML = `
+                    <div class="alert alert-error">
+                        <h3>System Error</h3>
+                        <p>${error.message}</p>
+                        <p>Please refresh the page (Ctrl + F5).</p>
+                    </div>
+                `;
+            }
+        }
+
+        function showVotedStatus() {
+            const statusDiv = document.getElementById('votingStatus');
+            statusDiv.innerHTML = `
+        <div class="alert alert-success">
+          <h3>✓ Vote Submitted Successfully!</h3>
+          <p>Thank you for participating in this election. Your vote has been recorded securely.</p>
+          <a href="results.html" class="btn btn-primary mt-2">View Results</a>
+        </div>
+      `;
+
+            document.getElementById('candidatesSection').style.display = 'none';
+        }
+
+        function showClosedStatus() {
+            const statusDiv = document.getElementById('votingStatus');
+            statusDiv.innerHTML = `
+        <div class="alert alert-error">
+          <h3>Voting is Currently Closed</h3>
+          <p>The election has ended. Thank you for your interest.</p>
+          <a href="results.html" class="btn btn-primary mt-2">View Results</a>
+        </div>
+      `;
+
+            document.getElementById('candidatesSection').style.display = 'none';
+        }
+
+        async function loadCandidates() {
+            const candidates = await Voting.getCandidates(); // Fixed: Added await
+            const candidatesList = document.getElementById('candidatesList');
+
+            if (candidates.length === 0) {
+                candidatesList.innerHTML = `
+          <div class="alert alert-info">
+            No candidates available at the moment.
+          </div>
+        `;
+                return;
+            }
+
+            candidatesList.innerHTML = candidates.map(candidate => {
+                const photoUrl = candidate.photo_url || '/onlinevoting/uploads/candidates/default_candidate.png';
+                return `
+        <div class="candidate-card" data-id="${candidate.id}">
+          <div class="candidate-header">
+            <div>
+              <img src="${photoUrl}" 
+                   alt="${candidate.name}" 
+                   style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; border: 3px solid var(--primary-color);"
+                   onerror="this.src='/onlinevoting/uploads/candidates/default_candidate.png'">
+              <h3 class="candidate-name">${candidate.name}</h3>
+              <div class="candidate-party">${candidate.party}</div>
+            </div>
+          </div>
+          <p class="candidate-description">${candidate.description}</p>
+          <button class="btn btn-secondary select-btn" style="width: 100%;">
+            Select Candidate
+          </button>
+        </div>
+      `;
+            }).join('');
+
+            // Add click handlers
+            document.querySelectorAll('.candidate-card').forEach(card => {
+                card.querySelector('.select-btn').addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    selectCandidate(card.dataset.id);
+                });
+            });
+        }
+
+        function selectCandidate(candidateId) {
+            // Deselect all
+            document.querySelectorAll('.candidate-card').forEach(card => {
+                card.classList.remove('selected');
+                card.querySelector('.select-btn').textContent = 'Select Candidate';
+            });
+
+            // Select clicked candidate
+            const card = document.querySelector(`[data-id="${candidateId}"]`);
+            card.classList.add('selected');
+            card.querySelector('.select-btn').textContent = '✓ Selected';
+
+            selectedCandidateId = candidateId;
+
+            // Show vote button
+            document.getElementById('voteButtonContainer').style.display = 'block';
+        }
+
+        // Submit vote handler
+        document.getElementById('submitVoteBtn').addEventListener('click', function () {
+            if (!selectedCandidateId) {
+                showAlert('Please select a candidate first.', 'error');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to submit your vote? This action cannot be undone.')) {
+                return;
+            }
+
+            const result = Voting.castVote(selectedCandidateId);
+
+            if (result.success) {
+                showAlert(result.message, 'success');
+                setTimeout(() => {
+                    loadDashboard(); // Reload to show voted status
+                }, 1500);
+            } else {
+                showAlert(result.message, 'error');
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Admin Dashboard - Manage election">
+    <title>Admin Dashboard - VoteSecure</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">🗳️ VoteSecure</a>
+            <ul class="navbar-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="admin-dashboard.html" class="active">Admin Dashboard</a></li>
+                <li><a href="results.html">Results</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Dashboard -->
+    <div class="dashboard">
+        <div class="dashboard-header">
+            <h1>Admin Dashboard</h1>
+            <p>Manage candidates and monitor election progress</p>
+        </div>
+
+        <div class="container dashboard-content">
+            <!-- Statistics -->
+            <div class="stats-grid" id="statsGrid"></div>
+
+            <!-- Users List -->
+            <div class="card mb-3">
+                <h3 class="mb-2">Registered Users</h3>
+                <div class="table-container" style="max-height: 300px; overflow-y: auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Voted?</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Election Control -->
+            <div class="card mb-3">
+                <h3 class="mb-2">Election Control</h3>
+                <div
+                    style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <p class="text-muted mb-1">Current Status: <span id="electionStatusText"
+                                class="badge badge-success">Open</span></p>
+                    </div>
+                    <button id="toggleElectionBtn" class="btn btn-danger">
+                        Close Election
+                    </button>
+                </div>
+            </div>
+
+            <!-- Add Candidate Form -->
+            <div class="card mb-3">
+                <h3 class="mb-2">Add New Candidate</h3>
+
+                <form id="addCandidateForm" class="grid grid-2" style="gap: 1rem;">
+                    <div class="form-group">
+                        <label for="candidateName" class="form-label">Candidate Name</label>
+                        <input type="text" id="candidateName" class="form-input" placeholder="Enter candidate name"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="candidateParty" class="form-label">Party</label>
+                        <input type="text" id="candidateParty" class="form-input" placeholder="Enter party name"
+                            required>
+                    </div>
+
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="candidateDescription" class="form-label">Description</label>
+                        <textarea id="candidateDescription" class="form-textarea" rows="3"
+                            placeholder="Enter candidate description"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="candidateEmoji" class="form-label">Emoji Icon</label>
+                        <input type="text" id="candidateEmoji" class="form-input" placeholder="👤" maxlength="2">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="candidatePhoto" class="form-label">Candidate Photo (Optional)</label>
+                        <input type="file" id="candidatePhoto" class="form-input"
+                            accept="image/jpeg,image/jpg,image/png">
+                        <small class="text-muted">Max 2MB - JPG, JPEG, or PNG</small>
+                        <div id="photoPreviewContainer" style="margin-top: 10px;"></div>
+                    </div>
+
+                    <div class="form-group" style="display: flex; align-items: flex-end; grid-column: 1 / -1;">
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            Add Candidate
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Add Administrator Form -->
+            <div class="card mb-3">
+                <h3 class="mb-2">Add New Administrator</h3>
+
+                <form id="addAdminForm" class="grid grid-2" style="gap: 1rem;">
+                    <div class="form-group">
+                        <label for="adminName" class="form-label">Full Name</label>
+                        <input type="text" id="adminName" class="form-input" placeholder="Enter admin name" required
+                            pattern="[A-Za-z\s]+" title="Please enter letters only">
+                        <div class="form-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="adminEmail" class="form-label">Email Address</label>
+                        <input type="email" id="adminEmail" class="form-input" placeholder="admin@example.com" required>
+                        <div class="form-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="adminPassword" class="form-label">Password</label>
+                        <input type="password" id="adminPassword" class="form-input"
+                            placeholder="Create strong password" required>
+                        <div class="form-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="adminConfirmPassword" class="form-label">Confirm Password</label>
+                        <input type="password" id="adminConfirmPassword" class="form-input"
+                            placeholder="Confirm password" required>
+                        <div class="form-error"></div>
+                    </div>
+
+                    <div class="form-group" style="display: flex; align-items: flex-end; grid-column: 1 / -1;">
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            Add Administrator
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Candidates List -->
+            <div class="card">
+                <h3 class="mb-2">Manage Candidates</h3>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Icon</th>
+                                <th>Name</th>
+                                <th>Party</th>
+                                <th>Votes</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="candidatesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/storage.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/voting.js"></script>
+    <script src="js/photo-upload.js"></script>
+    <script src="js/main.js"></script>
+
+    <script>
+        // Protect page - only admins can access
+        Auth.protectPage(true);
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboard();
+
+            // Initialize photo upload preview
+            const photoInput = document.getElementById('candidatePhoto');
+            const preview = PhotoUpload.createPreviewElement('photoPreviewContainer');
+            PhotoUpload.init(photoInput, preview, {
+                onError: (error) => showAlert(error, 'error')
+            });
+        });
+
+        function loadDashboard() {
+            loadStats();
+            loadElectionStatus();
+            loadElectionStatus();
+            loadCandidates();
+            loadUsers();
+        }
+
+        async function loadUsers() {
+            const users = await Voting.getUsers();
+            const tbody = document.getElementById('usersTableBody');
+
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No users found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td>${user.name}</td>
+
+                    <td>${user.email}</td>
+                    <td><span class="badge ${user.role === 'admin' ? 'badge-primary' : 'badge-secondary'}">${user.role}</span></td>
+                    <td>
+                        <span class="badge ${user.has_voted ? 'badge-success' : 'badge-danger'}">
+                            ${user.has_voted ? 'Yes' : 'No'}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadStats() {
+            const stats = await Voting.getStats();
+            const statsGrid = document.getElementById('statsGrid');
+
+            statsGrid.innerHTML = `
+        <div class="stat-card">
+          <div class="stat-value">${stats.totalVoters}</div>
+          <div class="stat-label">Total Voters</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${stats.votedCount}</div>
+          <div class="stat-label">Voted</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${stats.pendingCount}</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${stats.turnoutPercentage}%</div>
+          <div class="stat-label">Turnout</div>
+        </div>
+      `;
+        }
+
+        async function loadElectionStatus() {
+            const status = await Voting.getElectionStatus();
+            const statusText = document.getElementById('electionStatusText');
+            const toggleBtn = document.getElementById('toggleElectionBtn');
+
+            if (status.isOpen) {
+                statusText.textContent = 'Open';
+                statusText.className = 'badge badge-success';
+                toggleBtn.textContent = 'Close Election';
+                toggleBtn.className = 'btn btn-danger';
+            } else {
+                statusText.textContent = 'Closed';
+                statusText.className = 'badge badge-danger';
+                toggleBtn.textContent = 'Reopen Election';
+                toggleBtn.className = 'btn btn-success';
+            }
+        }
+
+        async function loadCandidates() {
+            const results = await Voting.getResults();
+            const tbody = document.getElementById('candidatesTableBody');
+
+            if (results.length === 0) {
+                tbody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align: center; color: var(--text-muted);">
+              No candidates available
+            </td>
+          </tr>
+        `;
+                return;
+            }
+
+            tbody.innerHTML = results.map(candidate => `
+        <tr>
+          <td>
+            <img src="${PhotoUpload.getPhotoUrl(candidate.photo)}" 
+                 alt="${candidate.name}" 
+                 style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;"
+                 onerror="this.src='/onlinevoting/uploads/candidates/default_candidate.png'">
+          </td>
+          <td>${candidate.name}</td>
+          <td>${candidate.party}</td>
+          <td><span class="badge badge-primary">${candidate.votes}</span></td>
+          <td>
+            <button class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.875rem;" onclick="removeCandidate('${candidate.id}')">
+              Remove
+            </button>
+          </td>
+        </tr>
+      `).join('');
+        }
+
+        // Add candidate form handler
+        document.getElementById('addCandidateForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const name = document.getElementById('candidateName').value.trim();
+            const party = document.getElementById('candidateParty').value.trim();
+            const description = document.getElementById('candidateDescription').value.trim();
+            const emoji = document.getElementById('candidateEmoji').value.trim() || '👤';
+            const photoInput = document.getElementById('candidatePhoto');
+            const photoFile = photoInput.files[0];
+
+            // Use PhotoUpload utility for file upload
+            const result = await PhotoUpload.uploadCandidateWithPhoto(
+                '/onlinevoting/backend/admin/add_candidate.php',
+                {
+                    name: name,
+                    party: party,
+                    description: description,
+                    image: emoji
+                },
+                photoFile
+            );
+
+            if (result.success) {
+                showAlert(result.message, 'success');
+                this.reset();
+                // Clear photo preview
+                const previewContainer = document.getElementById('photoPreviewContainer');
+                if (previewContainer) previewContainer.innerHTML = '';
+                await loadCandidates();
+            } else {
+                showAlert(result.message, 'error');
+            }
+        });
+
+        // Add admin form handler
+        document.getElementById('addAdminForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const name = document.getElementById('adminName').value.trim();
+            const email = document.getElementById('adminEmail').value.trim();
+            const password = document.getElementById('adminPassword').value;
+            const confirmPassword = document.getElementById('adminConfirmPassword').value;
+
+            // Clear previous errors
+            clearFormError(document.getElementById('adminName'));
+            clearFormError(document.getElementById('adminEmail'));
+            clearFormError(document.getElementById('adminPassword'));
+            clearFormError(document.getElementById('adminConfirmPassword'));
+
+            // Client-side validation
+            let hasError = false;
+
+            if (password !== confirmPassword) {
+                showFormError(document.getElementById('adminConfirmPassword'), 'Passwords do not match');
+                hasError = true;
+            }
+
+            if (hasError) return;
+
+            try {
+                const response = await fetch('backend/admin/add_admin.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        password: password
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    this.reset();
+                    loadUsers(); // Refresh user list to see new admin
+                } else {
+                    showAlert(result.message || 'Failed to add administrator', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('An unexpected error occurred', 'error');
+            }
+        });
+
+        // Toggle election status
+        // Toggle election status
+        document.getElementById('toggleElectionBtn').addEventListener('click', async function () {
+            if (!confirm('Are you sure you want to change the election status?')) {
+                return;
+            }
+
+            const result = await Voting.toggleElectionStatus();
+
+            if (result.success) {
+                showAlert(result.message, 'success');
+                await loadElectionStatus();
+            } else {
+                showAlert(result.message, 'error');
+            }
+        });
+
+        // Remove candidate
+        // Remove candidate
+        async function removeCandidate(candidateId) {
+            if (!confirm('Are you sure you want to remove this candidate? This will also remove all votes for this candidate.')) {
+                return;
+            }
+
+            const result = await Voting.removeCandidate(candidateId);
+
+            if (result.success) {
+                showAlert(result.message, 'success');
+                await loadDashboard();
+            } else {
+                showAlert(result.message, 'error');
+            }
+        }
+    </script>
+</body>
+
+</html>
